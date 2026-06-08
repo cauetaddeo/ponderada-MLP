@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+results/*.json
+results/*.csv
+results/*.png
+results/*.npz
