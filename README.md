@@ -27,8 +27,11 @@ python scripts/run_experiments.py
 Rode o teste de gradiente:
 
 ```bash
+python tests/test_gradients.py
 pytest
 ```
+
+Se `pytest` ainda nao estiver instalado, o comando direto `python tests/test_gradients.py` ja valida o backpropagation.
 
 Os arquivos gerados ficam em `results/`: metricas em JSON, curvas de loss/acuracia, matriz de confusao e tabela de experimentos.
 
