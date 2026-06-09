@@ -59,6 +59,13 @@ def main():
                 **exp,
                 "test_loss": f"{metrics['test']['loss']:.4f}",
                 "test_accuracy": f"{metrics['test']['accuracy']:.4f}",
+                "precision_macro": f"{metrics['test']['precision_macro']:.4f}",
+                "recall_macro": f"{metrics['test']['recall_macro']:.4f}",
+                "f1_macro": f"{metrics['test']['f1_macro']:.4f}",
+                "precision_weighted": f"{metrics['test']['precision_weighted']:.4f}",
+                "recall_weighted": f"{metrics['test']['recall_weighted']:.4f}",
+                "f1_weighted": f"{metrics['test']['f1_weighted']:.4f}",
+                "balanced_accuracy": f"{metrics['test']['balanced_accuracy']:.4f}",
             }
         )
 

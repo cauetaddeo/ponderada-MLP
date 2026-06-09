@@ -1,4 +1,5 @@
 import argparse
+import csv
 import gzip
 import json
 import sys
@@ -120,6 +121,56 @@ def confusion_matrix(y_true, y_pred, n_classes=10):
     return matrix
 
 
+def classification_metrics(matrix):
+    true_positive = np.diag(matrix).astype(np.float64)
+    predicted = matrix.sum(axis=0).astype(np.float64)
+    support = matrix.sum(axis=1).astype(np.float64)
+    total = matrix.sum()
+
+    precision = np.divide(true_positive, predicted, out=np.zeros_like(true_positive), where=predicted != 0)
+    recall = np.divide(true_positive, support, out=np.zeros_like(true_positive), where=support != 0)
+    f1 = np.divide(
+        2 * precision * recall,
+        precision + recall,
+        out=np.zeros_like(precision),
+        where=(precision + recall) != 0,
+    )
+
+    per_class = []
+    for label in range(matrix.shape[0]):
+        per_class.append(
+            {
+                "class": int(label),
+                "precision": float(precision[label]),
+                "recall": float(recall[label]),
+                "f1": float(f1[label]),
+                "support": int(support[label]),
+            }
+        )
+
+    weights = support / total
+    return {
+        "accuracy": float(true_positive.sum() / total),
+        "macro_precision": float(np.mean(precision)),
+        "macro_recall": float(np.mean(recall)),
+        "macro_f1": float(np.mean(f1)),
+        "weighted_precision": float(np.sum(precision * weights)),
+        "weighted_recall": float(np.sum(recall * weights)),
+        "weighted_f1": float(np.sum(f1 * weights)),
+        "balanced_accuracy": float(np.mean(recall)),
+        "per_class": per_class,
+        "confusion_matrix": matrix.tolist(),
+    }
+
+
+def write_classification_report(metrics, output_path):
+    fieldnames = ["class", "precision", "recall", "f1", "support"]
+    with output_path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(metrics["per_class"])
+
+
 def plot_confusion_matrix(matrix, output_path):
     fig, ax = plt.subplots(figsize=(6, 5))
     im = ax.imshow(matrix, cmap="Blues")
@@ -164,22 +215,44 @@ def main():
     test_metrics = model.evaluate(x_test, y_test)
     y_pred = model.predict(x_test)
     conf = confusion_matrix(y_test, y_pred)
+    class_metrics = classification_metrics(conf)
+    test_metrics.update(
+        {
+            "precision_macro": class_metrics["macro_precision"],
+            "recall_macro": class_metrics["macro_recall"],
+            "f1_macro": class_metrics["macro_f1"],
+            "precision_weighted": class_metrics["weighted_precision"],
+            "recall_weighted": class_metrics["weighted_recall"],
+            "f1_weighted": class_metrics["weighted_f1"],
+            "balanced_accuracy": class_metrics["balanced_accuracy"],
+        }
+    )
 
     payload = {
         "config": vars(args),
         "history": history,
         "test": test_metrics,
+        "classification": class_metrics,
     }
     metrics_path = results_dir / f"{args.run_name}_metrics.json"
+    report_path = results_dir / f"{args.run_name}_classification_report.csv"
     plot_path = results_dir / f"{args.run_name}_curves.png"
     confusion_path = results_dir / f"{args.run_name}_confusion.png"
 
     metrics_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    write_classification_report(class_metrics, report_path)
     plot_history(history, plot_path)
     plot_confusion_matrix(conf, confusion_path)
 
-    print(f"Teste: loss={test_metrics['loss']:.4f} accuracy={test_metrics['accuracy']:.4f}")
+    print(
+        "Teste: "
+        f"loss={test_metrics['loss']:.4f} "
+        f"accuracy={test_metrics['accuracy']:.4f} "
+        f"recall_macro={test_metrics['recall_macro']:.4f} "
+        f"f1_macro={test_metrics['f1_macro']:.4f}"
+    )
     print(f"Metricas salvas em {metrics_path}")
+    print(f"Relatorio por classe salvo em {report_path}")
     print(f"Curvas salvas em {plot_path}")
     print(f"Matriz de confusao salva em {confusion_path}")
 

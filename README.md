@@ -52,19 +52,36 @@ Escolhi duas camadas ocultas porque o enunciado pede ao menos duas e porque essa
 
 Depois de rodar os experimentos, preencha esta tabela com os valores salvos em `results/experiments.csv`.
 
-| Experimento | Arquitetura | Ativacao | Learning rate | Momentum | Acuracia teste |
-| --- | --- | --- | --- | --- | --- |
-| baseline_relu | 784-256-128-10 | ReLU | 0.05 | 0.9 | preencher apos treino |
-| deeper_relu | 784-256-128-64-10 | ReLU | 0.03 | 0.9 | preencher apos treino |
+| Experimento | Arquitetura | Ativacao | Learning rate | Momentum | Accuracy | Recall macro | F1 macro |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline_relu | 784-256-128-10 | ReLU | 0.05 | 0.9 | preencher apos treino | preencher apos treino | preencher apos treino |
+| deeper_relu | 784-256-128-64-10 | ReLU | 0.03 | 0.9 | preencher apos treino | preencher apos treino | preencher apos treino |
 
 Arquivos esperados:
 
 - `results/baseline_relu_curves.png`: curva de loss e acuracia.
 - `results/baseline_relu_confusion.png`: matriz de confusao.
 - `results/baseline_relu_metrics.json`: metricas finais.
+- `results/baseline_relu_classification_report.csv`: precision, recall e F1 por digito.
 - `results/experiments.csv`: tabela comparativa.
 
 A meta do trabalho e atingir acuracia de teste maior ou igual a 92%. Caso a primeira execucao fique abaixo disso, aumente o numero de epocas para 20 ou ajuste o learning rate entre `0.03` e `0.08`.
+
+## Checklist dos requisitos
+
+- [x] Forward pass para numero arbitrario de camadas.
+- [x] Ao menos 2 camadas ocultas nas configuracoes principais.
+- [x] Ativacao configuravel (`relu` e `tanh`).
+- [x] Softmax + cross-entropy na saida.
+- [x] Backpropagation manual.
+- [x] Mini-batches com SGD e learning rate configuravel.
+- [x] Plot de loss e acuracia ao longo do treinamento.
+- [x] Comparacao de 2 configuracoes.
+- [x] Matriz de confusao.
+- [x] Precision, recall, F1, balanced accuracy e metricas por digito.
+- [x] Teste de gradiente numerico.
+- [x] Historico com mais de 6 commits descritivos.
+- [ ] Acuracia final >= 92% deve ser confirmada depois de rodar `python scripts/run_experiments.py` ou a primeira celula do notebook.
 
 ## Decisoes e dificuldades
 

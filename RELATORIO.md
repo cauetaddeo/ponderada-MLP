@@ -442,6 +442,28 @@ O README explica como instalar, rodar, treinar, comparar experimentos e preenche
 10. Corrigi o problema de importacao do teste.
 11. Criei README e notebook de experimentos.
 12. Criei commits descritivos para atender ao requisito de historico.
+13. Adicionei metricas de avaliacao: accuracy, precision, recall, F1, balanced accuracy e relatorio por digito.
+14. Atualizei o notebook para imprimir tabelas de metricas de cada experimento.
+
+## Verificacao dos requisitos do notebook
+
+| Requisito | Status | Onde esta |
+| --- | --- | --- |
+| Forward pass com numero arbitrario de camadas | Cumprido | `mlp/network.py`, metodo `forward` |
+| Ao menos 2 camadas ocultas | Cumprido | Configuracoes `784-256-128-10` e `784-256-128-64-10` |
+| Ativacao configuravel | Cumprido | `mlp/activations.py` e argumento `--activation` |
+| Softmax + cross-entropy | Cumprido | `mlp/losses.py` |
+| Backpropagation manual | Cumprido | `mlp/network.py`, metodo `backward` |
+| Mini-batches com SGD | Cumprido | `mlp/network.py` e `mlp/optimizers.py` |
+| Learning rate configuravel | Cumprido | argumento `--learning-rate` |
+| Acuracia >= 92% | Pendente de confirmacao final | Rodar notebook ou `python scripts/run_experiments.py` |
+| Plot de loss e acuracia | Cumprido | `results/*_curves.png` |
+| Comparacao de 2 configuracoes | Cumprido | `scripts/run_experiments.py` |
+| README com secoes obrigatorias | Cumprido, mas resultados finais devem ser preenchidos | `README.md` |
+| Decisoes e dificuldades em primeira pessoa | Rascunhado; deve ser personalizado por voce | `README.md` |
+| Historico de commits minimo 6 | Cumprido | `git log` |
+| Gradient check numerico | Cumprido | `tests/test_gradients.py` |
+| Matriz de confusao comentavel | Cumprido | `results/*_confusion.png` |
 
 ## Como explicar a decisao tecnica principal
 
