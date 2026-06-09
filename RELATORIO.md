@@ -465,6 +465,25 @@ O README explica como instalar, rodar, treinar, comparar experimentos e preenche
 | Gradient check numerico | Cumprido | `tests/test_gradients.py` |
 | Matriz de confusao comentavel | Cumprido | `results/*_confusion.png` |
 
+## Diagnostico de overfitting
+
+Ao rodar os experimentos completos, a acuracia de treino chegou a `1.0000`. Isso nao significa que a rede acertou 100% no teste. Os resultados salvos em `results/` mostram:
+
+| Experimento | Train accuracy | Validation accuracy | Test accuracy | Gap treino-validacao |
+| --- | --- | --- | --- | --- |
+| baseline_relu | 1.0000 | 0.9810 | 0.9812 | 0.0190 |
+| deeper_relu | 1.0000 | 0.9818 | 0.9823 | 0.0182 |
+
+Minha interpretacao: existe overfitting leve, porque a rede memorizou o conjunto de treino ao final das 15 epocas, mas a diferenca para validacao/teste fica perto de 2 pontos percentuais. Nao parece haver vazamento do conjunto de teste, porque a matriz de confusao ainda tem erros: `baseline_relu` errou 188 dos 10.000 exemplos de teste e `deeper_relu` errou 177.
+
+Para reduzir esse overfitting, as opcoes mais simples seriam:
+
+- treinar por menos epocas, por exemplo parar perto da melhor validacao;
+- diminuir um pouco a arquitetura;
+- adicionar regularizacao L2;
+- adicionar early stopping;
+- usar data augmentation, se fosse permitido/necessario.
+
 ## Como explicar a decisao tecnica principal
 
 A decisao mais importante foi deixar a rede com arquitetura configuravel. Em vez de escrever uma rede fixa com exatamente duas camadas ocultas, `network.py` percorre uma lista de tamanhos. Isso permite testar arquiteturas diferentes sem reescrever o backpropagation.

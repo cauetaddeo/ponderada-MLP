@@ -171,6 +171,35 @@ def write_classification_report(metrics, output_path):
         writer.writerows(metrics["per_class"])
 
 
+def training_diagnostics(history, test_metrics):
+    final_train_accuracy = history["accuracy"][-1]
+    final_train_loss = history["loss"][-1]
+    diagnostics = {
+        "final_train_accuracy": final_train_accuracy,
+        "final_train_loss": final_train_loss,
+        "test_accuracy": test_metrics["accuracy"],
+        "test_loss": test_metrics["loss"],
+    }
+
+    if history.get("val_accuracy"):
+        val_accuracies = history["val_accuracy"]
+        best_epoch = int(np.argmax(val_accuracies)) + 1
+        final_val_accuracy = val_accuracies[-1]
+        diagnostics.update(
+            {
+                "final_val_accuracy": final_val_accuracy,
+                "final_val_loss": history["val_loss"][-1],
+                "best_val_epoch": best_epoch,
+                "best_val_accuracy": val_accuracies[best_epoch - 1],
+                "best_val_loss": history["val_loss"][best_epoch - 1],
+                "train_val_accuracy_gap": final_train_accuracy - final_val_accuracy,
+                "train_test_accuracy_gap": final_train_accuracy - test_metrics["accuracy"],
+            }
+        )
+
+    return diagnostics
+
+
 def plot_confusion_matrix(matrix, output_path):
     fig, ax = plt.subplots(figsize=(6, 5))
     im = ax.imshow(matrix, cmap="Blues")
@@ -216,6 +245,7 @@ def main():
     y_pred = model.predict(x_test)
     conf = confusion_matrix(y_test, y_pred)
     class_metrics = classification_metrics(conf)
+    diagnostics = training_diagnostics(history, test_metrics)
     test_metrics.update(
         {
             "precision_macro": class_metrics["macro_precision"],
@@ -233,6 +263,7 @@ def main():
         "history": history,
         "test": test_metrics,
         "classification": class_metrics,
+        "diagnostics": diagnostics,
     }
     metrics_path = results_dir / f"{args.run_name}_metrics.json"
     report_path = results_dir / f"{args.run_name}_classification_report.csv"
@@ -251,6 +282,14 @@ def main():
         f"recall_macro={test_metrics['recall_macro']:.4f} "
         f"f1_macro={test_metrics['f1_macro']:.4f}"
     )
+    if "train_val_accuracy_gap" in diagnostics:
+        print(
+            "Diagnostico: "
+            f"train_acc={diagnostics['final_train_accuracy']:.4f} "
+            f"val_acc={diagnostics['final_val_accuracy']:.4f} "
+            f"gap_train_val={diagnostics['train_val_accuracy_gap']:.4f} "
+            f"best_val_epoch={diagnostics['best_val_epoch']}"
+        )
     print(f"Metricas salvas em {metrics_path}")
     print(f"Relatorio por classe salvo em {report_path}")
     print(f"Curvas salvas em {plot_path}")

@@ -54,9 +54,16 @@ def main():
         subprocess.run(command, check=True, cwd=PROJECT_ROOT)
         metrics_path = results_dir / f"{exp['run_name']}_metrics.json"
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        diagnostics = metrics.get("diagnostics", {})
         rows.append(
             {
                 **exp,
+                "final_train_accuracy": f"{diagnostics.get('final_train_accuracy', 0.0):.4f}",
+                "final_val_accuracy": f"{diagnostics.get('final_val_accuracy', 0.0):.4f}",
+                "best_val_accuracy": f"{diagnostics.get('best_val_accuracy', 0.0):.4f}",
+                "best_val_epoch": diagnostics.get("best_val_epoch", ""),
+                "train_val_accuracy_gap": f"{diagnostics.get('train_val_accuracy_gap', 0.0):.4f}",
+                "train_test_accuracy_gap": f"{diagnostics.get('train_test_accuracy_gap', 0.0):.4f}",
                 "test_loss": f"{metrics['test']['loss']:.4f}",
                 "test_accuracy": f"{metrics['test']['accuracy']:.4f}",
                 "precision_macro": f"{metrics['test']['precision_macro']:.4f}",
