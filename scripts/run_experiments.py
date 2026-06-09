@@ -5,10 +5,13 @@ import sys
 from pathlib import Path
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
 EXPERIMENTS = [
     {
         "run_name": "baseline_relu",
-        "layers": "784,256,128,10",
+        "layers": "784-256-128-10",
         "activation": "relu",
         "learning_rate": "0.05",
         "momentum": "0.9",
@@ -16,7 +19,7 @@ EXPERIMENTS = [
     },
     {
         "run_name": "deeper_relu",
-        "layers": "784,256,128,64,10",
+        "layers": "784-256-128-64-10",
         "activation": "relu",
         "learning_rate": "0.03",
         "momentum": "0.9",
@@ -26,14 +29,15 @@ EXPERIMENTS = [
 
 
 def main():
-    results_dir = Path("results")
+    results_dir = PROJECT_ROOT / "results"
     results_dir.mkdir(exist_ok=True)
 
     rows = []
     for exp in EXPERIMENTS:
         command = [
             sys.executable,
-            "scripts/train_mnist.py",
+            "-m",
+            "scripts.train_mnist",
             "--run-name",
             exp["run_name"],
             "--layers",
@@ -47,7 +51,7 @@ def main():
             "--epochs",
             exp["epochs"],
         ]
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=True, cwd=PROJECT_ROOT)
         metrics_path = results_dir / f"{exp['run_name']}_metrics.json"
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
         rows.append(

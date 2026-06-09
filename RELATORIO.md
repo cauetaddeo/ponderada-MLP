@@ -72,7 +72,7 @@ pytest tests/test_gradients.py
 Treine a rede:
 
 ```bash
-python scripts/train_mnist.py --run-name baseline_relu --layers 784,256,128,10 --epochs 15 --learning-rate 0.05 --momentum 0.9
+python -m scripts.train_mnist --run-name baseline_relu --layers 784-256-128-10 --epochs 15 --learning-rate 0.05 --momentum 0.9
 ```
 
 Compare duas configuracoes:
@@ -322,7 +322,20 @@ Este script executa um treino completo no MNIST.
 
 ### `load_mnist(validation_size=10000)`
 
-Carrega o MNIST via Keras, normaliza os pixels para o intervalo `[0, 1]`, transforma imagens 28x28 em vetores de 784 valores e separa uma parte do treino para validacao.
+Carrega o MNIST. Primeiro tenta usar `keras.datasets.mnist`. Se Keras/TensorFlow nao estiver instalado, usa o fallback `load_mnist_from_idx()`, que baixa os arquivos IDX oficiais do MNIST para `data/mnist/`.
+
+Depois disso, normaliza os pixels para o intervalo `[0, 1]`, transforma imagens 28x28 em vetores de 784 valores e separa uma parte do treino para validacao.
+
+### `load_mnist_from_idx()`
+
+Baixa e le os quatro arquivos oficiais do MNIST:
+
+- imagens de treino;
+- labels de treino;
+- imagens de teste;
+- labels de teste.
+
+Esse fallback foi adicionado porque seu ambiente virtual estava em Python 3.14 e nao tinha `keras/tensorflow` disponivel. Assim o notebook consegue rodar sem depender de TensorFlow.
 
 ### `parse_layers(raw)`
 
@@ -473,4 +486,4 @@ O script de treino usa matplotlib para salvar as curvas. Instale as dependencias
 
 ### Erros ao carregar MNIST
 
-O MNIST e carregado via Keras. Se houver erro nessa parte, provavelmente falta instalar `keras`/`tensorflow-cpu` ou a versao do Python e incompatibilidade com TensorFlow.
+O codigo tenta Keras primeiro. Se Keras nao existir, baixa o MNIST diretamente dos arquivos IDX oficiais. Se houver erro nessa parte, provavelmente e problema de conexao para baixar o dataset ou de permissao para escrever em `data/mnist/`.

@@ -1,6 +1,6 @@
 # MLP do Zero no MNIST
 
-Este projeto implementa um Multi-Layer Perceptron usando apenas NumPy para os calculos da rede neural. Keras e usado somente para baixar/carregar o dataset MNIST, como permitido no enunciado.
+Este projeto implementa um Multi-Layer Perceptron usando apenas NumPy para os calculos da rede neural. O carregamento do MNIST tenta usar Keras quando disponivel; se Keras/TensorFlow nao estiver instalado, o script baixa os arquivos IDX oficiais do MNIST diretamente.
 
 ## Como rodar
 
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 Treine a configuracao principal:
 
 ```bash
-python scripts/train_mnist.py --run-name baseline_relu --layers 784,256,128,10 --epochs 15 --learning-rate 0.05 --momentum 0.9
+python -m scripts.train_mnist --run-name baseline_relu --layers 784-256-128-10 --epochs 15 --learning-rate 0.05 --momentum 0.9
 ```
 
 Rode a comparacao entre duas arquiteturas:

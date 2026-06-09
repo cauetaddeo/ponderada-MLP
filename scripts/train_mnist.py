@@ -1,26 +1,74 @@
 import argparse
+import gzip
 import json
 import sys
+import urllib.request
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from mlp import MLP
+
+
+MNIST_URLS = {
+    "train_images": "https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz",
+    "train_labels": "https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz",
+    "test_images": "https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz",
+    "test_labels": "https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz",
+}
+
+
+def _read_idx_images(path):
+    with gzip.open(path, "rb") as file:
+        data = np.frombuffer(file.read(), dtype=np.uint8)
+    magic, n_images, rows, cols = data[:16].view(">i4")
+    if magic != 2051:
+        raise ValueError(f"Arquivo de imagens MNIST invalido: {path}")
+    return data[16:].reshape(n_images, rows, cols)
+
+
+def _read_idx_labels(path):
+    with gzip.open(path, "rb") as file:
+        data = np.frombuffer(file.read(), dtype=np.uint8)
+    magic, n_labels = data[:8].view(">i4")
+    if magic != 2049:
+        raise ValueError(f"Arquivo de labels MNIST invalido: {path}")
+    return data[8:].reshape(n_labels)
+
+
+def _download_mnist_file(url, output_path):
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if output_path.exists():
+        return
+    print(f"Baixando {url}...")
+    urllib.request.urlretrieve(url, output_path)
+
+
+def load_mnist_from_idx():
+    data_dir = PROJECT_ROOT / "data" / "mnist"
+    paths = {name: data_dir / url.rsplit("/", 1)[-1] for name, url in MNIST_URLS.items()}
+    for name, url in MNIST_URLS.items():
+        _download_mnist_file(url, paths[name])
+
+    x_train = _read_idx_images(paths["train_images"])
+    y_train = _read_idx_labels(paths["train_labels"])
+    x_test = _read_idx_images(paths["test_images"])
+    y_test = _read_idx_labels(paths["test_labels"])
+    return (x_train, y_train), (x_test, y_test)
 
 
 def load_mnist(validation_size=10000):
     try:
         from keras.datasets import mnist
-    except ImportError as exc:
-        raise ImportError(
-            "Instale as dependencias com `pip install -r requirements.txt`. "
-            "O pacote keras e usado apenas para carregar o MNIST."
-        ) from exc
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    except (ImportError, ModuleNotFoundError):
+        print("Keras/TensorFlow nao encontrado. Usando fallback IDX oficial do MNIST.")
+        (x_train, y_train), (x_test, y_test) = load_mnist_from_idx()
 
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.reshape(x_train.shape[0], -1).astype(np.float64) / 255.0
     x_test = x_test.reshape(x_test.shape[0], -1).astype(np.float64) / 255.0
     y_train = y_train.astype(np.int64)
@@ -38,7 +86,8 @@ def load_mnist(validation_size=10000):
 
 
 def parse_layers(raw):
-    return [int(item.strip()) for item in raw.split(",") if item.strip()]
+    normalized = raw.replace("-", ",")
+    return [int(item.strip()) for item in normalized.split(",") if item.strip()]
 
 
 def plot_history(history, output_path):
@@ -87,7 +136,7 @@ def plot_confusion_matrix(matrix, output_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Treina um MLP em NumPy no MNIST.")
-    parser.add_argument("--layers", default="784,256,128,10", help="Dimensoes separadas por virgula.")
+    parser.add_argument("--layers", default="784-256-128-10", help="Dimensoes separadas por hifen ou virgula.")
     parser.add_argument("--activation", default="relu", choices=["relu", "tanh"])
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
@@ -97,7 +146,7 @@ def main():
     parser.add_argument("--run-name", default="baseline")
     args = parser.parse_args()
 
-    results_dir = Path("results")
+    results_dir = PROJECT_ROOT / "results"
     results_dir.mkdir(exist_ok=True)
 
     x_train, y_train, x_val, y_val, x_test, y_test = load_mnist()
