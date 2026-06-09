@@ -140,21 +140,3 @@ Essa divisao por `batch_size` deixa a escala do gradiente estavel quando o taman
 `-- requirements.txt
 ```
 
-## Commits
-
-O enunciado pede pelo menos 6 commits com mensagens descritivas. Uma sequencia adequada e:
-
-```bash
-git add mlp/activations.py mlp/losses.py mlp/network.py mlp/optimizers.py mlp/__init__.py
-git commit -m "feat: implementa mlp com forward e backprop manual"
-git add scripts/train_mnist.py
-git commit -m "feat: adiciona treino do mnist e salvamento de metricas"
-git add scripts/run_experiments.py
-git commit -m "feat: adiciona comparacao de arquiteturas"
-git add tests/test_gradients.py
-git commit -m "test: valida gradientes com aproximacao numerica"
-git add notebooks/experimentos.ipynb
-git commit -m "docs: registra experimentos no notebook"
-git add README.md requirements.txt results/
-git commit -m "docs: documenta resultados e decisoes do projeto"
-```
