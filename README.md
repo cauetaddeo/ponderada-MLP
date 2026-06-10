@@ -156,6 +156,20 @@ Em `mlp/losses.py`, a funcao `softmax` transforma os logits da ultima camada em 
 
 Em `mlp/optimizers.py`, o SGD atualiza cada peso na direcao oposta ao gradiente. O parametro `learning_rate` controla o tamanho do passo, e o `momentum` reaproveita parte da atualizacao anterior para suavizar os movimentos durante o treinamento.
 
+### Metodos principais da classe `MLP`
+
+A classe `MLP`, em `mlp/network.py`, concentra o funcionamento da rede:
+
+- `__init__`: recebe `layer_sizes`, ativacao e seed; guarda a arquitetura e escolhe a funcao de ativacao.
+- `_init_params`: cria pesos e biases de cada camada. Os pesos ficam em chaves como `W1`, `W2`, `W3`; os biases ficam em `b1`, `b2`, `b3`.
+- `forward`: calcula as ativacoes camada por camada e salva os valores intermediarios em `cache`.
+- `compute_loss`: executa o forward e calcula a cross-entropy, sendo usado tambem no gradient check.
+- `backward`: percorre as camadas de tras para frente e calcula os gradientes de pesos e biases.
+- `fit`: executa o loop de treino com embaralhamento, mini-batches, forward, backward e atualizacao por SGD.
+- `predict_proba`: retorna as probabilidades da softmax.
+- `predict`: retorna a classe com maior probabilidade.
+- `evaluate`: calcula loss e acuracia em treino, validacao ou teste.
+
 ### Forward pass
 
 A classe `MLP` aceita uma lista de tamanhos de camada, como `[784, 256, 128, 10]`. Isso evita escrever uma rede fixa: o mesmo codigo funciona para duas, tres ou mais camadas ocultas. Nos scripts, a mesma arquitetura e passada pela linha de comando como `784-256-128-10` e convertida para lista por `parse_layers`.
@@ -207,6 +221,23 @@ O script `train_mnist.py` tambem calcula metricas de teste:
 - balanced accuracy;
 - matriz de confusao;
 - relatorio por digito com precision, recall, F1 e support.
+
+### Funcoes auxiliares dos scripts
+
+Em `scripts/train_mnist.py`, algumas funcoes existem para separar responsabilidades:
+
+- `load_mnist`: carrega o MNIST, normaliza os pixels para `[0, 1]`, transforma cada imagem 28x28 em vetor de 784 posicoes e separa validacao.
+- `load_mnist_from_idx`: fallback que baixa os arquivos IDX oficiais do MNIST quando Keras/TensorFlow nao esta disponivel.
+- `_read_idx_images` e `_read_idx_labels`: leem os arquivos compactados do MNIST no formato IDX.
+- `parse_layers`: transforma uma string como `784-256-128-10` em `[784, 256, 128, 10]`.
+- `plot_history`: gera o grafico de loss e acuracia por epoca.
+- `confusion_matrix`: monta a matriz de confusao a partir dos rotulos reais e preditos.
+- `classification_metrics`: calcula precision, recall, F1, balanced accuracy e metricas por classe a partir da matriz de confusao.
+- `write_classification_report`: salva o relatorio por digito em CSV.
+- `training_diagnostics`: compara treino, validacao e teste para indicar possivel overfitting.
+- `plot_confusion_matrix`: salva a matriz de confusao como imagem.
+
+Em `scripts/run_experiments.py`, a funcao `main` roda as configuracoes definidas em `EXPERIMENTS`, chama o treinamento de cada uma e consolida os resultados finais em `results/experiments.csv`.
 
 ## Erros comuns
 
