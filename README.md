@@ -124,22 +124,47 @@ As matrizes de confusao mostram quantas imagens de cada digito foram classificad
 
 4. Se eu fosse refazer do zero, eu implementaria early stopping e talvez regularizacao L2 desde o inicio. Isso ajudaria a evitar que a rede memorizasse totalmente o treino nas ultimas epocas, mesmo mantendo a acuracia de teste acima da meta.
 
-## Implementacao
+## Como o codigo funciona
 
-O forward pass aceita um numero arbitrario de camadas. Para cada camada oculta, o codigo calcula:
+O projeto foi separado em arquivos pequenos para deixar claro o papel de cada parte da rede:
+
+- `mlp/activations.py`: implementa `relu`, `tanh` e suas derivadas. A funcao `get_activation` permite escolher a ativacao por nome.
+- `mlp/losses.py`: implementa `softmax`, `cross_entropy`, `accuracy` e `one_hot`.
+- `mlp/optimizers.py`: implementa SGD com learning rate configuravel e momentum opcional.
+- `mlp/network.py`: contem a classe `MLP`, responsavel por inicializar pesos, executar forward pass, backpropagation, treino, predicao e avaliacao.
+- `scripts/train_mnist.py`: carrega o MNIST, treina uma configuracao, salva metricas, curva de treino e matriz de confusao.
+- `scripts/run_experiments.py`: roda as duas configuracoes comparadas e gera `results/experiments.csv`.
+- `tests/test_gradients.py`: faz um gradient check numerico em uma rede pequena.
+
+### Forward pass
+
+A classe `MLP` aceita uma lista de tamanhos de camada, como `784-256-128-10`. Isso evita escrever uma rede fixa: o mesmo codigo funciona para duas, tres ou mais camadas ocultas.
+
+Para cada camada oculta, o codigo calcula:
 
 ```python
 Z = A_anterior @ W + b
 A = relu(Z)
 ```
 
-Na camada final, calcula os logits e aplica softmax. No backward, o gradiente inicial da saida e:
+Na camada final, calcula os logits e aplica softmax:
+
+```python
+logits = A_anterior @ W + b
+probs = softmax(logits)
+```
+
+A softmax transforma os logits em probabilidades por classe. Para evitar overflow numerico, o codigo subtrai o maior logit de cada linha antes de aplicar `exp`.
+
+### Backpropagation
+
+Como a saida usa softmax com cross-entropy, o gradiente inicial fica simples:
 
 ```python
 dZ = (probs - y_one_hot) / batch_size
 ```
 
-Em seguida, para cada camada, os gradientes sao:
+Depois, para cada camada, o codigo calcula:
 
 ```python
 dW = A_anterior.T @ dZ
@@ -147,7 +172,33 @@ db = soma(dZ)
 dZ_anterior = (dZ @ W.T) * derivada_relu(Z_anterior)
 ```
 
-Essa divisao por `batch_size` deixa a escala do gradiente estavel quando o tamanho do mini-batch muda.
+Essa divisao por `batch_size` deixa a escala do gradiente estavel quando o tamanho do mini-batch muda. O teste em `tests/test_gradients.py` compara esse gradiente analitico com uma aproximacao numerica por diferenca finita.
+
+### Treinamento e avaliacao
+
+O metodo `fit` embaralha o conjunto de treino, divide os dados em mini-batches, executa forward/backward e atualiza os pesos com SGD. Ao final de cada epoca, salva loss e acuracia de treino e validacao.
+
+O script `train_mnist.py` tambem calcula metricas de teste:
+
+- accuracy;
+- precision macro e weighted;
+- recall macro e weighted;
+- F1 macro e weighted;
+- balanced accuracy;
+- matriz de confusao;
+- relatorio por digito com precision, recall, F1 e support.
+
+## Erros comuns
+
+Se aparecer `No module named 'numpy'`, `pytest` ou `matplotlib`, as dependencias ainda nao foram instaladas no ambiente virtual. Rode:
+
+```bash
+pip install -r requirements.txt
+```
+
+Se houver erro ao carregar o MNIST, o problema provavelmente esta na conexao ou na permissao para escrever em `data/mnist/`. O codigo tenta usar `keras.datasets.mnist` quando disponivel; se Keras/TensorFlow nao estiver instalado, baixa os arquivos IDX oficiais do MNIST diretamente.
+
+Se a acuracia de treino aparecer como `1.0000`, isso nao significa que o teste tambem ficou perfeito. Neste projeto, treino chegou a 100%, mas teste ficou perto de 98%, indicando overfitting leve.
 
 ## Estrutura
 
