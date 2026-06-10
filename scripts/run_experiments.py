@@ -1,3 +1,4 @@
+import argparse
 import csv
 import json
 import subprocess
@@ -29,11 +30,20 @@ EXPERIMENTS = [
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Roda as configuracoes comparativas do MLP no MNIST.")
+    parser.add_argument("--epochs", type=int, default=None, help="Sobrescreve o numero de epocas dos experimentos.")
+    parser.add_argument("--batch-size", type=int, default=None, help="Sobrescreve o tamanho do mini-batch.")
+    args = parser.parse_args()
+
     results_dir = PROJECT_ROOT / "results"
     results_dir.mkdir(exist_ok=True)
 
     rows = []
-    for exp in EXPERIMENTS:
+    for base_exp in EXPERIMENTS:
+        exp = base_exp.copy()
+        if args.epochs is not None:
+            exp["epochs"] = str(args.epochs)
+
         command = [
             sys.executable,
             "-m",
@@ -51,6 +61,9 @@ def main():
             "--epochs",
             exp["epochs"],
         ]
+        if args.batch_size is not None:
+            command.extend(["--batch-size", str(args.batch_size)])
+
         subprocess.run(command, check=True, cwd=PROJECT_ROOT)
         metrics_path = results_dir / f"{exp['run_name']}_metrics.json"
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
