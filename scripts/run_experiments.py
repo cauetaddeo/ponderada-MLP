@@ -9,6 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+# Configuracoes comparadas na entrega.
 EXPERIMENTS = [
     {
         "run_name": "baseline_relu",
@@ -30,6 +31,7 @@ EXPERIMENTS = [
 
 
 def main():
+    # --epochs e --batch-size ajudam a testar rapidamente sem editar a lista.
     parser = argparse.ArgumentParser(description="Roda as configuracoes comparativas do MLP no MNIST.")
     parser.add_argument("--epochs", type=int, default=None, help="Sobrescreve o numero de epocas dos experimentos.")
     parser.add_argument("--batch-size", type=int, default=None, help="Sobrescreve o tamanho do mini-batch.")
@@ -40,11 +42,13 @@ def main():
 
     rows = []
     for base_exp in EXPERIMENTS:
+        # Copia para permitir sobrescrever parametros sem alterar o original.
         exp = base_exp.copy()
         if args.epochs is not None:
             exp["epochs"] = str(args.epochs)
 
         command = [
+            # Usa -m para resolver imports a partir da raiz do projeto.
             sys.executable,
             "-m",
             "scripts.train_mnist",
@@ -64,6 +68,7 @@ def main():
         if args.batch_size is not None:
             command.extend(["--batch-size", str(args.batch_size)])
 
+        # Cada experimento gera seu proprio JSON de metricas.
         subprocess.run(command, check=True, cwd=PROJECT_ROOT)
         metrics_path = results_dir / f"{exp['run_name']}_metrics.json"
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
@@ -90,6 +95,7 @@ def main():
         )
 
     table_path = results_dir / "experiments.csv"
+    # Consolida as configuracoes e resultados em uma tabela comparativa.
     with table_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=rows[0].keys())
         writer.writeheader()

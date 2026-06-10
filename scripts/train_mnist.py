@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Garante que o pacote local mlp seja encontrado ao rodar o script.
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from mlp import MLP
@@ -24,6 +25,7 @@ MNIST_URLS = {
 
 
 def _read_idx_images(path):
+    # Le imagens no formato IDX usado pelo MNIST original.
     with gzip.open(path, "rb") as file:
         data = np.frombuffer(file.read(), dtype=np.uint8)
     magic, n_images, rows, cols = data[:16].view(">i4")
@@ -33,6 +35,7 @@ def _read_idx_images(path):
 
 
 def _read_idx_labels(path):
+    # Le labels no formato IDX usado pelo MNIST original.
     with gzip.open(path, "rb") as file:
         data = np.frombuffer(file.read(), dtype=np.uint8)
     magic, n_labels = data[:8].view(">i4")
@@ -42,6 +45,7 @@ def _read_idx_labels(path):
 
 
 def _download_mnist_file(url, output_path):
+    # Evita baixar novamente se o arquivo ja existe.
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if output_path.exists():
         return
@@ -50,6 +54,7 @@ def _download_mnist_file(url, output_path):
 
 
 def load_mnist_from_idx():
+    # Fallback sem TensorFlow: baixa os quatro arquivos oficiais do MNIST.
     data_dir = PROJECT_ROOT / "data" / "mnist"
     paths = {name: data_dir / url.rsplit("/", 1)[-1] for name, url in MNIST_URLS.items()}
     for name, url in MNIST_URLS.items():
@@ -64,18 +69,21 @@ def load_mnist_from_idx():
 
 def load_mnist(validation_size=10000):
     try:
+        # Keras e usado apenas para carregar os dados, nao para treinar a rede.
         from keras.datasets import mnist
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
     except (ImportError, ModuleNotFoundError):
         print("Keras/TensorFlow nao encontrado. Usando fallback IDX oficial do MNIST.")
         (x_train, y_train), (x_test, y_test) = load_mnist_from_idx()
 
+    # Achata 28x28 para 784 e normaliza pixels para [0, 1].
     x_train = x_train.reshape(x_train.shape[0], -1).astype(np.float64) / 255.0
     x_test = x_test.reshape(x_test.shape[0], -1).astype(np.float64) / 255.0
     y_train = y_train.astype(np.int64)
     y_test = y_test.astype(np.int64)
 
     if validation_size:
+        # Usa o fim do treino como validacao, mantendo o teste separado.
         x_val = x_train[-validation_size:]
         y_val = y_train[-validation_size:]
         x_train = x_train[:-validation_size]
@@ -87,11 +95,13 @@ def load_mnist(validation_size=10000):
 
 
 def parse_layers(raw):
+    # Aceita tanto "784-256-128-10" quanto "784,256,128,10".
     normalized = raw.replace("-", ",")
     return [int(item.strip()) for item in normalized.split(",") if item.strip()]
 
 
 def plot_history(history, output_path):
+    # Salva curvas para documentar convergencia e possivel overfitting.
     epochs = np.arange(1, len(history["loss"]) + 1)
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
@@ -115,6 +125,7 @@ def plot_history(history, output_path):
 
 
 def confusion_matrix(y_true, y_pred, n_classes=10):
+    # Linhas sao classes reais; colunas sao classes preditas.
     matrix = np.zeros((n_classes, n_classes), dtype=int)
     for real, pred in zip(y_true, y_pred):
         matrix[real, pred] += 1
@@ -122,11 +133,13 @@ def confusion_matrix(y_true, y_pred, n_classes=10):
 
 
 def classification_metrics(matrix):
+    # Calcula metricas a partir da matriz de confusao, sem sklearn.
     true_positive = np.diag(matrix).astype(np.float64)
     predicted = matrix.sum(axis=0).astype(np.float64)
     support = matrix.sum(axis=1).astype(np.float64)
     total = matrix.sum()
 
+    # np.divide com where evita divisao por zero em classes sem predicao.
     precision = np.divide(true_positive, predicted, out=np.zeros_like(true_positive), where=predicted != 0)
     recall = np.divide(true_positive, support, out=np.zeros_like(true_positive), where=support != 0)
     f1 = np.divide(
@@ -138,6 +151,7 @@ def classification_metrics(matrix):
 
     per_class = []
     for label in range(matrix.shape[0]):
+        # Guarda metricas individuais de cada digito.
         per_class.append(
             {
                 "class": int(label),
@@ -164,6 +178,7 @@ def classification_metrics(matrix):
 
 
 def write_classification_report(metrics, output_path):
+    # Exporta o relatorio por classe para consulta no README/notebook.
     fieldnames = ["class", "precision", "recall", "f1", "support"]
     with output_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -172,6 +187,7 @@ def write_classification_report(metrics, output_path):
 
 
 def training_diagnostics(history, test_metrics):
+    # Compara treino, validacao e teste para sinalizar overfitting.
     final_train_accuracy = history["accuracy"][-1]
     final_train_loss = history["loss"][-1]
     diagnostics = {
@@ -183,6 +199,7 @@ def training_diagnostics(history, test_metrics):
 
     if history.get("val_accuracy"):
         val_accuracies = history["val_accuracy"]
+        # Melhor epoca pela acuracia de validacao.
         best_epoch = int(np.argmax(val_accuracies)) + 1
         final_val_accuracy = val_accuracies[-1]
         diagnostics.update(
@@ -201,6 +218,7 @@ def training_diagnostics(history, test_metrics):
 
 
 def plot_confusion_matrix(matrix, output_path):
+    # Gera imagem da matriz de confusao para a pasta results.
     fig, ax = plt.subplots(figsize=(6, 5))
     im = ax.imshow(matrix, cmap="Blues")
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
@@ -215,6 +233,7 @@ def plot_confusion_matrix(matrix, output_path):
 
 
 def main():
+    # Argumentos permitem repetir experimentos sem alterar o codigo.
     parser = argparse.ArgumentParser(description="Treina um MLP em NumPy no MNIST.")
     parser.add_argument("--layers", default="784-256-128-10", help="Dimensoes separadas por hifen ou virgula.")
     parser.add_argument("--activation", default="relu", choices=["relu", "tanh"])
@@ -229,6 +248,7 @@ def main():
     results_dir = PROJECT_ROOT / "results"
     results_dir.mkdir(exist_ok=True)
 
+    # Pipeline principal: dados, modelo, treino, avaliacao e artefatos.
     x_train, y_train, x_val, y_val, x_test, y_test = load_mnist()
     model = MLP(parse_layers(args.layers), activation=args.activation, seed=args.seed)
     history = model.fit(
@@ -243,6 +263,7 @@ def main():
     )
     test_metrics = model.evaluate(x_test, y_test)
     y_pred = model.predict(x_test)
+    # A matriz de confusao alimenta as metricas detalhadas.
     conf = confusion_matrix(y_test, y_pred)
     class_metrics = classification_metrics(conf)
     diagnostics = training_diagnostics(history, test_metrics)
@@ -270,6 +291,7 @@ def main():
     plot_path = results_dir / f"{args.run_name}_curves.png"
     confusion_path = results_dir / f"{args.run_name}_confusion.png"
 
+    # Salva arquivos finais usados pelo README e notebook.
     metrics_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     write_classification_report(class_metrics, report_path)
     plot_history(history, plot_path)
