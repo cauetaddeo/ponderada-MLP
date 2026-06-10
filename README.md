@@ -136,9 +136,29 @@ O projeto foi separado em arquivos pequenos para deixar claro o papel de cada pa
 - `scripts/run_experiments.py`: roda as duas configuracoes comparadas e gera `results/experiments.csv`.
 - `tests/test_gradients.py`: faz um gradient check numerico em uma rede pequena.
 
+### Ativacoes e arquitetura configuravel
+
+Em `mlp/activations.py`, cada ativacao tem duas funcoes: a funcao direta e sua derivada. Para ReLU, `relu(z)` aplica `max(0, z)`, enquanto `relu_derivative(z)` retorna `1` onde `z > 0` e `0` no restante. Essa derivada e o que permite propagar o erro para as camadas anteriores no backpropagation. Tambem deixei `tanh` implementada para permitir comparacoes simples de ativacao.
+
+A funcao `get_activation(name)` devolve o par `(ativacao, derivada)` a partir de uma string. Por isso a rede pode ser criada com:
+
+```python
+MLP([784, 256, 128, 10], activation="relu")
+```
+
+A lista `[784, 256, 128, 10]` define toda a arquitetura: entrada com 784 atributos, duas camadas ocultas com 256 e 128 neuronios, e saida com 10 classes. Internamente, `network.py` percorre essa lista para criar os pesos `W1`, `W2`, `W3` e biases `b1`, `b2`, `b3`. Com isso, a mesma classe tambem aceita uma rede mais profunda, como `[784, 256, 128, 64, 10]`, sem reescrever o forward ou o backward.
+
+Na inicializacao, usei escala `sqrt(2 / fan_in)` quando a ativacao e ReLU. Essa e a ideia da inicializacao He: manter a variancia das ativacoes mais estavel ao passar por varias camadas. Os biases comecam em zero, porque a quebra de simetria ja acontece nos pesos aleatorios.
+
+### Loss, otimizador e metricas
+
+Em `mlp/losses.py`, a funcao `softmax` transforma os logits da ultima camada em probabilidades. A `cross_entropy` mede o quanto a probabilidade atribuida a classe correta esta distante do ideal. Tambem existe `one_hot`, que converte rotulos como `3` ou `7` em vetores de classe para facilitar o calculo do gradiente da saida.
+
+Em `mlp/optimizers.py`, o SGD atualiza cada peso na direcao oposta ao gradiente. O parametro `learning_rate` controla o tamanho do passo, e o `momentum` reaproveita parte da atualizacao anterior para suavizar os movimentos durante o treinamento.
+
 ### Forward pass
 
-A classe `MLP` aceita uma lista de tamanhos de camada, como `784-256-128-10`. Isso evita escrever uma rede fixa: o mesmo codigo funciona para duas, tres ou mais camadas ocultas.
+A classe `MLP` aceita uma lista de tamanhos de camada, como `[784, 256, 128, 10]`. Isso evita escrever uma rede fixa: o mesmo codigo funciona para duas, tres ou mais camadas ocultas. Nos scripts, a mesma arquitetura e passada pela linha de comando como `784-256-128-10` e convertida para lista por `parse_layers`.
 
 Para cada camada oculta, o codigo calcula:
 
