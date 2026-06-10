@@ -78,7 +78,7 @@ python -m scripts.train_mnist --run-name baseline_relu --layers 784-256-128-10 -
 Compare duas configuracoes:
 
 ```bash
-python scripts/run_experiments.py
+python -m scripts.run_experiments
 ```
 
 ## Estrutura geral
@@ -342,7 +342,7 @@ Esse fallback foi adicionado porque seu ambiente virtual estava em Python 3.14 e
 Converte uma string como:
 
 ```text
-784,256,128,10
+784-256-128-10
 ```
 
 em:
@@ -388,7 +388,7 @@ As configuracoes atuais sao:
 - `baseline_relu`: `784-256-128-10`.
 - `deeper_relu`: `784-256-128-64-10`.
 
-Para cada experimento, ele chama `scripts/train_mnist.py` com argumentos diferentes. Depois le o JSON de metricas e cria `results/experiments.csv`.
+Para cada experimento, ele chama `scripts.train_mnist` com argumentos diferentes. Depois le o JSON de metricas e cria `results/experiments.csv`.
 
 ## Arquivo `tests/test_gradients.py`
 
@@ -426,7 +426,7 @@ Use o notebook para:
 
 ## Arquivo `README.md`
 
-O README explica como instalar, rodar, treinar, comparar experimentos e preencher resultados. A secao "Decisoes e dificuldades" deve ser ajustada por voce depois de executar os treinos, porque a avaliacao quer uma reflexao pessoal.
+O README explica como instalar, rodar, treinar, comparar experimentos e interpretar os resultados. A secao "Decisoes e dificuldades" esta preenchida em primeira pessoa com as principais escolhas e problemas encontrados.
 
 ## O que eu fiz no projeto
 
@@ -456,11 +456,11 @@ O README explica como instalar, rodar, treinar, comparar experimentos e preenche
 | Backpropagation manual | Cumprido | `mlp/network.py`, metodo `backward` |
 | Mini-batches com SGD | Cumprido | `mlp/network.py` e `mlp/optimizers.py` |
 | Learning rate configuravel | Cumprido | argumento `--learning-rate` |
-| Acuracia >= 92% | Pendente de confirmacao final | Rodar notebook ou `python scripts/run_experiments.py` |
+| Acuracia >= 92% | Cumprido | `baseline_relu` = 0.9812 e `deeper_relu` = 0.9823 |
 | Plot de loss e acuracia | Cumprido | `results/*_curves.png` |
 | Comparacao de 2 configuracoes | Cumprido | `scripts/run_experiments.py` |
-| README com secoes obrigatorias | Cumprido, mas resultados finais devem ser preenchidos | `README.md` |
-| Decisoes e dificuldades em primeira pessoa | Rascunhado; deve ser personalizado por voce | `README.md` |
+| README com secoes obrigatorias | Cumprido | `README.md` |
+| Decisoes e dificuldades em primeira pessoa | Cumprido | `README.md` |
 | Historico de commits minimo 6 | Cumprido | `git log` |
 | Gradient check numerico | Cumprido | `tests/test_gradients.py` |
 | Matriz de confusao comentavel | Cumprido | `results/*_confusion.png` |
