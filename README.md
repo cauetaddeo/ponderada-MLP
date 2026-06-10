@@ -98,21 +98,7 @@ As matrizes de confusao mostram quantas imagens de cada digito foram classificad
 
 ![Matriz de confusao da rede mais profunda](results/deeper_relu_confusion.png)
 
-## Checklist dos requisitos
 
-- [x] Forward pass para numero arbitrario de camadas.
-- [x] Ao menos 2 camadas ocultas nas configuracoes principais.
-- [x] Ativacao configuravel (`relu` e `tanh`).
-- [x] Softmax + cross-entropy na saida.
-- [x] Backpropagation manual.
-- [x] Mini-batches com SGD e learning rate configuravel.
-- [x] Plot de loss e acuracia ao longo do treinamento.
-- [x] Comparacao de 2 configuracoes.
-- [x] Matriz de confusao.
-- [x] Precision, recall, F1, balanced accuracy e metricas por digito.
-- [x] Teste de gradiente numerico.
-- [x] Historico com mais de 6 commits descritivos.
-- [x] Acuracia final >= 92% confirmada nos resultados salvos.
 
 ## Decisoes e dificuldades
 
