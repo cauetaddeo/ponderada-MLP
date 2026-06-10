@@ -74,6 +74,30 @@ Arquivos esperados:
 
 A meta do trabalho era atingir acuracia de teste maior ou igual a 92%. As duas configuracoes passaram essa meta com folga.
 
+### Curvas de treinamento
+
+As curvas abaixo mostram a evolucao da loss e da acuracia ao longo das epocas. A loss cai de forma consistente e a acuracia de treino sobe ate `1.0000`, enquanto a validacao estabiliza perto de `0.98`. Essa diferenca indica overfitting leve: a rede memorizou o treino, mas ainda manteve boa generalizacao no conjunto de validacao e teste.
+
+**baseline_relu**
+
+![Curvas de loss e acuracia da baseline](results/baseline_relu_curves.png)
+
+**deeper_relu**
+
+![Curvas de loss e acuracia da rede mais profunda](results/deeper_relu_curves.png)
+
+### Matrizes de confusao
+
+As matrizes de confusao mostram quantas imagens de cada digito foram classificadas corretamente ou confundidas com outros digitos. A diagonal principal concentra quase todos os exemplos, o que confirma o bom desempenho. Ainda assim, existem erros fora da diagonal: a `baseline_relu` errou 188 imagens de teste e a `deeper_relu` errou 177.
+
+**baseline_relu**
+
+![Matriz de confusao da baseline](results/baseline_relu_confusion.png)
+
+**deeper_relu**
+
+![Matriz de confusao da rede mais profunda](results/deeper_relu_confusion.png)
+
 ## Checklist dos requisitos
 
 - [x] Forward pass para numero arbitrario de camadas.
