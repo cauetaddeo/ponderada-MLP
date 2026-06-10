@@ -6,4 +6,13 @@ results/*.json
 results/*.csv
 results/*.png
 results/*.npz
+!results/baseline_relu_metrics.json
+!results/baseline_relu_classification_report.csv
+!results/baseline_relu_curves.png
+!results/baseline_relu_confusion.png
+!results/deeper_relu_metrics.json
+!results/deeper_relu_classification_report.csv
+!results/deeper_relu_curves.png
+!results/deeper_relu_confusion.png
+!results/experiments.csv
 data/
